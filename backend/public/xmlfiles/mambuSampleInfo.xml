@@ -1,0 +1,12 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<app>
+     <id>mbusmp03052024</id>
+     <name>Sample App Info</name>
+     <provider>Mambu's Americas Delivery Team</provider>
+     <description>An iFrame App Demo by Carlos</description>
+     <extensionpoint>
+          <location>LOAN_ACCOUNT_VIEW</location>
+          <label>Sample Info</label>
+          <url>https://mambuapp.carlosmazon.com/sample</url>
+     </extensionpoint>
+</app>
