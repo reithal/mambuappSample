@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router(['caseSensitive', 'strict']);
 const crypto = require('crypto');
+const dotenv = require('dotenv');
+
 router.use(express.json());
+dotenv.config();
 
 let dynamicHTML = '<p>Unknown</p>';
-
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -13,10 +15,10 @@ router.get('/', function (req, res, next) {
 
 router.post('/', (req, res) => {
   try {
-    console.log(req.headers);
+    //console.log(req.headers);
     let check = validateSignature(req);
     if (check.isValidated) {
-      dynamicHTML = "<html><style>h1 {color: #73757d;}</style><body><h1>Sample Mambu App</h1>";
+      dynamicHTML = "<html><style>h1 {color: #73757d;}</style><body><h1>Loan Info Mambu App</h1>";
       dynamicHTML += `<p>Welcome user encodedKey: ${check.data.USER_KEY}</p>`;
       dynamicHTML += `<p>You have accesed the entity ID: ${check.data.OBJECT_ID} from ${check.data.DOMAIN}</p>`;
       res.send(dynamicHTML);
@@ -36,10 +38,10 @@ function validateSignature(req) {
     const signedRequest = req.body.signed_request;
     const splitSignature = signedRequest.split('.');
     const dataRequest = JSON.parse(new Buffer.from(splitSignature[1], 'base64'));
-    let compare = crypto.createHmac('sha256', 'Online12345').update(splitSignature[1]).digest('hex');
+    let compare = crypto.createHmac('sha256', process.env.APP_SECRET).update(splitSignature[1]).digest('hex');
     console.debug(dataRequest);
     if (compare === splitSignature[0]) {
-      let result = { 'isValidated' : true, 'data': dataRequest }
+      let result = { 'isValidated': true, 'data': dataRequest }
       return result;
     } else {
       let result = { 'isValidated': false, 'data': null }
