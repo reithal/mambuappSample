@@ -18,7 +18,7 @@ router.post('/', (req, res) => {
     console.log(req.headers);
     let check = validateSignature(req);
     if (check.isValidated) {
-      dynamicHTML = "<html><style>h1 {color: #73757d;}</style><body><h1>Loan Info Mambu App</h1>";
+      dynamicHTML = "<html><style>h1 {color: #73757d;}</style><body><h1>Loan Info Mambu App</h1>"; 
       dynamicHTML += `<p style="width:800px; word-wrap:break-word; display:inline-block;">The body of request received is ${JSON.stringify(req.body)}</p>`;
       dynamicHTML += `<p>The PART1 of request received is ${req.body.signed_request.split('.')[0]}`;
       dynamicHTML += `<br style="width:800px; word-wrap:break-word; display:inline-block;">The PART2 of request received is ${req.body.signed_request.split('.')[1]}</p>`;
