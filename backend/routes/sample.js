@@ -14,11 +14,13 @@ router.get('/', function (req, res, next) {
 router.post('/', (req, res) => {
   try {
     console.log(req.headers);
+    const body = JSON.stringify(req.body);
     let check = validateSignature(req);
     if (check.isValidated) {
       dynamicHTML = "<html><style>h1 {color: #73757d;}</style><body><h1>Sample Mambu App</h1>";
+      dynamicHTML += `<p>The Signature received is ${body}</p>`
       dynamicHTML += `<p>Welcome user encodedKey: ${check.data.USER_KEY}</p>`;
-      dynamicHTML += `<p>You have accesed the entity ID: ${check.data.OBJECT_ID} from ${check.data.DOMAIN}</p>`;
+      dynamicHTML += `<p>You have accesed the entity ID: ${check.data.OBJECT_ID} from ${check.data.DOMAIN}</p></html>`;
       res.send(dynamicHTML);
     } else {
       res.sendStatus(401);

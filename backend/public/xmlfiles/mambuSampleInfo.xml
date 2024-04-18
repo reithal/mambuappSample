@@ -4,9 +4,11 @@
      <name>Sample App Info</name>
      <provider>Mambu's Americas Delivery Team</provider>
      <description>An iFrame App Demo by Carlos</description>
+     <uninstallUrl>https://750f57242989a70c466f2523a4b22891.m.pipedream.net</uninstallUrl>
+     <installUrl>https://750f57242989a70c466f2523a4b22891.m.pipedream.net</installUrl>
      <extensionpoint>
           <location>LOAN_ACCOUNT_VIEW</location>
           <label>Sample Info</label>
-          <url>https://mambuapp.carlosmazon.com/sample</url>
+          <url>https://750f57242989a70c466f2523a4b22891.m.pipedream.net</url>
      </extensionpoint>
 </app>
