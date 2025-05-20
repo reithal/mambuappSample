@@ -16,8 +16,8 @@ router.get('/', function (req, res, next) {
 router.post('/', (req, res) => {
   try {
     console.log(req.headers);
-    let check = validateSignature(req);
-    if (check.isValidated) {
+    let check = decodeSignature(req);
+    if (check.isDecoded) {
       dynamicHTML = "<html><style>h1 {color: #73757d;}</style><body><h1>Loan Info Mambu App</h1>"; 
       dynamicHTML += `<p style="width:800px; word-wrap:break-word; display:inline-block;">The body of request received is ${JSON.stringify(req.body)}</p>`;
       dynamicHTML += `<p>The PART1 of request received is ${req.body.signed_request.split('.')[0]}`;
@@ -39,7 +39,7 @@ router.post('/', (req, res) => {
 
 })
 
-function validateSignature(req) {
+function decodeSignature(req) {
   try {
     const signedRequest = req.body.signed_request;
     const splitSignature = signedRequest.split('.');
@@ -47,10 +47,10 @@ function validateSignature(req) {
     let compare = crypto.createHmac('sha256', process.env.APP_SECRET).update(splitSignature[1]).digest('hex');
     console.debug(dataRequest);
     if (compare === splitSignature[0]) {
-      let result = { 'isValidated': true, 'data': dataRequest }
+      let result = { 'isDecoded': true, 'data': dataRequest }
       return result;
     } else {
-      let result = { 'isValidated': false, 'data': null }
+      let result = { 'isDecoded': false, 'data': null }
       return result;
     }
   } catch (error) {
