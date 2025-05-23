@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Funded Loans</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body>
+    <header>
+      <nav class="navbar navbar-expand-lg bg-body-tertiary">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="#">Funding MA</a>
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <% if (initialData.userName) { %>
+                <li class="nav-item">
+                        <span class="navbar-text">Welcome, <%= initialData.userName %>!</span>
+                    </li>
+                <% } %>
+              </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <main>
+      <br>
+      <section class="container">
+        <div
+          class="card text-center mx-auto"
+          style="color: #4fb645; max-width: 300px"
+        >
+          <div class="card-header">REMAINING BALANCE</div>
+          <div class="card-body">
+            <h5 class="card-title"><%= (parseFloat(initialData.depositDetails.balances.availableBalance) || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' }) %></h5>
+          </div>
+        </div>
+      </section>
+      <section class="container-fluid">
+        <table class="table table-striped table-hover caption-top">
+          <caption>
+            List of Loan Accounts
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Approved Date</th>
+              <th scope="col">Funded Loan ID</th>
+              <th scope="col">Disbursement Date</th>
+              <th scope="col">Product Type</th>
+              <th scope="col">Customer Name</th>
+              <th scope="col">Customer ID</th>
+              <th scope="col">Account State</th>
+              <th scope="col">Loan Amount</th>
+              <th scope="col">Total Disbursed</th>
+              <th scope="col">Remaining to Disburse</th>
+              <th scope="col">Principal Balance</th>
+              <th scope="col">Principal Paid</th>
+            </tr>
+          </thead>
+          <tbody class="table-group-divider" id="loanList">
+            <% if (initialData.loanAccounts && initialData.loanAccounts.length > 0) { %>
+              <% initialData.loanAccounts.forEach(function(account) { %>
+                 <tr>
+                  <td><td><%= account.approvedDate ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(account.approvedDate)).replace(/ /g, '-') : 'N/A' %></td></td>
+                  <td><%= account.id || 'N/A' %></td>
+                   <td><%= account.disbursementDetails && account.disbursementDetails.expectedDisbursementDate ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(account.disbursementDetails.expectedDisbursementDate)).replace(/ /g, '-') : 'N/A' %></td>
+                  <td><%= account.loanName || 'N/A' %></td>
+                  <td><%= initialData.clientName || 'N/A' %></td>
+                  <td><%= account.accountHolderKey || 'N/A' %></td>
+                  <td><%= account.accountState || 'N/A' %></td>
+                  <td><%= (parseFloat(account.loanAmount) || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' }) %></td>
+                  <td>
+                    <%
+                      let totalDisbursedAmount = (parseFloat(account.loanAmount) || 0); // Default to loanAmount if no tranches
+                      if (account.tranches && account.tranches.length > 0) {
+                        totalDisbursedAmount = account.tranches.reduce((sum, tranche) => {
+                          return sum + (tranche.disbursementDetails && tranche.disbursementDetails.disbursementTransactionKey ? (parseFloat(tranche.amount) || 0) : 0);
+                        }, 0);
+                      }
+                    %>
+                    <%= totalDisbursedAmount.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) %>
+                  </td>
+                  <td>
+                    <%
+                      let remainingToDisburseAmount = 'N/A';
+                      if (account.tranches && account.tranches.length > 0) {
+                        const pendingTrancheAmount = account.tranches.reduce((sum, tranche) => {
+                          return sum + (tranche.disbursementDetails && tranche.disbursementDetails.disbursementTransactionKey ? 0 : (parseFloat(tranche.amount) || 0));
+                        }, 0);
+                        remainingToDisburseAmount = pendingTrancheAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); // Format without currency symbol
+                      }
+                    %>
+                    <%= remainingToDisburseAmount %>
+                  </td>
+                  <td><%= (parseFloat(account.balances && account.balances.principalBalance) || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' }) %></td>
+                  <td><%= (parseFloat(account.balances && account.balances.principalPaid) || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' }) %></td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr>
+                <td colspan="12" class="text-center">No loan accounts found.</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </section>
+    </main>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO"
+      crossorigin="anonymous"
+    ></script>
+
+    <script>
+      // This line is crucial for passing server-rendered data to your client-side React app.
+      window.__INITIAL_DATA__ = <%- JSON.stringify(initialData)  %>;
+    </script>
+    </body>
+</html>
