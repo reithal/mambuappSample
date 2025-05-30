@@ -16,12 +16,14 @@ const port = process.env.PORT || 3000;
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // --- Route Handling ---
 app.use('/', mainRoutes);
 app.use('/sample', sampleRouter);
 app.use('/mambuapp', mambuxmlRouter);
 app.use('/sampleapp', mambuxmlRouter);
+app.use('/fundingapp', mambuxmlRouter);
 
 // --- Static Files Serving (for your React app's build) ---
 // Will be uncommented and configured when React is integrated

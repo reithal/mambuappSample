@@ -16,6 +16,9 @@ router.get('/', function (req, res, next) {
   if (req.baseUrl == '/sampleapp') {
   fileName = './xmlfiles/mambuSampleInfo.xml';
   }
+  if (req.baseUrl == '/fundingapp') {
+  fileName = './xmlfiles/mambuFundingApp.xml';
+  }
   
   res.sendFile(fileName, options, function (err) {
       if (err) {

@@ -19,7 +19,8 @@ router.get('/', function (req, res, next) {
 router.post('/process-data', async (req, res) => {
   try {
     const receivedData = req.body;
-    
+    //console.debug("received data", receivedData);
+
     if (!receivedData || !receivedData.signed_request) {
       console.error('Line 23 Validation Error: Missing or invalid data in request body.', receivedData);
       return res.status(401).send('Unauthorized: Missing or invalid signature.');
@@ -43,6 +44,10 @@ router.post('/process-data', async (req, res) => {
       console.error('Configuration Error: MAMBU_API_URL is not set in environment variables.');
       return res.status(500).send('Server configuration error: External API URL not set.');
     }
+
+    const mambuDomain = new URL(mambuApiBaseUrl).origin; // Result: 'https://yourtenant.mambu.com'
+    console.log(`Mambu Domain: ${mambuDomain}`);
+
     const mambuApiHeaders = {
       'Content-Type': 'application/json',
       'Accept': 'application/vnd.mambu.v2+json',
@@ -62,9 +67,9 @@ router.post('/process-data', async (req, res) => {
     const userDetails = await getUsersById(userEncodedKey, apiConfiguration);
 
     // TODO: To be Verify
-    if (!userDetails || !userDetails._Mambu_App_Roles_Users.hasFundingAccess=='YES') {
+    if (!userDetails || !userDetails._Mambu_App_Roles_Users || !userDetails.hasFundingAccess =='YES') {
       console.error('External API Response Error: Expected user Mambu App access but received:', userDetails._Mambu_App_Roles_Users);
-      return res.status(403).send("Permission Denied: Could not process custom fied data or user doesn't have access from Mambu API.");
+      return res.status(403).send("Permission Denied: Could not process custom fied data or user doesn't have access for this Mambu App.");
     }
     const userName = `${userDetails.firstName} ${userDetails.lastName}`.trim();
     
@@ -83,10 +88,40 @@ router.post('/process-data', async (req, res) => {
       console.error('External API Response Error: Expected an array of loan accounts, but received:', loanAccounts);
       return res.status(500).send('Server Error: Could not process loan account data from external API.');
     }
-
     console.log(`Successfully fetched ${loanAccounts.length} loan accounts.`);
+    
+    
+    // --- Fetch the Client Details ---
+    const clientKeys = loanAccounts.map((clients) => clients.accountHolderKey);
+    const uniqueClientKeys = [...new Set(clientKeys)]; // Still good to get unique keys
+    console.log(`Workspacing details for ${uniqueClientKeys.length} unique clients sequentially...`);
+    const clientsData = {}; // Object to store client details by their key
+    for (const key of uniqueClientKeys) {
+        try {
+            const clientDetails = await getClientById(key, apiConfiguration);
+            clientsData[clientDetails.encodedKey] = clientDetails;
+        } catch (error) {
+            console.error(`Failed to fetch client details for key ${key} sequentially:`, error.message);
+            // Continue even if one client fetch fails
+        }
+    }
+    console.log('Finished fetching client details.');
+    
 
-    res.render('index', { initialData: { userName, depositDetails, loanAccounts } });
+    // --- Prepare Data for EJS Rendering ---
+    const initialData = {
+      userName: userName, // Use actual fetched user name
+      depositDetails: depositDetails,
+      loanAccounts: loanAccounts.map(loan => {
+          // Attach client details to each loan account for easier rendering
+          loan.clientDetails = clientsData[loan.accountHolderKey];
+          return loan;
+      
+      }),
+      mambuDomain: mambuDomain
+    };
+   // Render the EJS template with initial data
+    res.render('index', { initialData });
 
   } catch (error) {
     console.error('Internal Server Error during /process-data:', error);
@@ -96,8 +131,7 @@ router.post('/process-data', async (req, res) => {
 
 router.post('/', (req, res) => {
   try {
-    console.log(req.headers);
-    let check = decodeSignature(req);
+    let check = decodeSignature(req.body);
     if (check.isDecoded) {
       dynamicHTML = "<html><style>h1 {color: #73757d;}</style><body><h1>Loan Info Mambu App</h1>";
       dynamicHTML += `<p style="width:800px; word-wrap:break-word; display:inline-block;">The body of request received is ${JSON.stringify(req.body)}</p>`;
@@ -154,7 +188,7 @@ async function getUsersById(userId, apiConfiguration) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
   const data = await response.json();
-  //console.log("The user data", data);
+
   return data;
 }
 
@@ -205,8 +239,19 @@ async function postSearchLoans(fundAccountId, apiConfiguration) {
   return data;
 }
 
+async function getClientById(clientId, apiConfiguration) {
+  const response = await fetch(`${apiConfiguration.apiUrl}/clients/${clientId}`, {
+    headers: apiConfiguration.headers,
+    method: 'GET'
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`Mambu API Error: Status ${response.status} - ${response.statusText}. Response: ${errorText}`);
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const data = await response.json();
 
-
-
+  return data;
+}
 
 module.exports = router;

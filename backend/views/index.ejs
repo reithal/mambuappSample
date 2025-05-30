@@ -77,12 +77,34 @@
             <% if (initialData.loanAccounts && initialData.loanAccounts.length > 0) { %>
               <% initialData.loanAccounts.forEach(function(account) { %>
                  <tr>
-                  <td><td><%= account.approvedDate ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(account.approvedDate)).replace(/ /g, '-') : 'N/A' %></td></td>
-                  <td><%= account.id || 'N/A' %></td>
+                  <td><%= account.approvedDate ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(account.approvedDate)).replace(/ /g, '-') : 'N/A' %></td>
+                  <td>
+                    <% if (account.encodedKey && initialData.mambuDomain) { %>
+                      <a href="<%= initialData.mambuDomain %>/#loanaccount.id=<%= account.encodedKey %>" target="_blank" rel="noopener noreferrer">
+                        <%= account.id || 'N/A' %>
+                      </a>
+                    <% } else { %>
+                      <%= account.id || 'N/A' %>
+                    <% } %>
+                  </td>
                    <td><%= account.disbursementDetails && account.disbursementDetails.expectedDisbursementDate ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(account.disbursementDetails.expectedDisbursementDate)).replace(/ /g, '-') : 'N/A' %></td>
                   <td><%= account.loanName || 'N/A' %></td>
-                  <td><%= initialData.clientName || 'N/A' %></td>
-                  <td><%= account.accountHolderKey || 'N/A' %></td>
+                  <td>
+                    <% if (account.clientDetails) { %>
+                      <%= account.clientDetails.firstName || '' %> <%= account.clientDetails.lastName || '' %>
+                    <% } else { %>
+                      N/A
+                    <% } %>
+                  </td>
+                 <td>
+                    <% if (account.clientDetails && initialData.mambuDomain) { %>
+                      <a href="<%= initialData.mambuDomain %>/#client.id=<%= account.clientDetails.encodedKey %>" target="_blank" rel="noopener noreferrer">
+                        <%= account.clientDetails.id %>
+                      </a>
+                      <% } else { %>
+                      <%= account.clientDetails.id || 'N/A' %>
+                    <% } %>
+                  </td>
                   <td><%= account.accountState || 'N/A' %></td>
                   <td><%= (parseFloat(account.loanAmount) || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' }) %></td>
                   <td>
